@@ -11,7 +11,7 @@ screen = pygame.display.set_mode([WIDTH, HEIGHT])
 pygame.display.set_caption('2048')
 timer = pygame.time.Clock()
 fps = 60
-font = pygame.font.Font('freesansbold.ttf', 24)
+font = pygame.font.Font('font/beer money.ttf', 24)
 
 # 2048 game color library
 colors = {0: (204, 192, 179),
@@ -29,7 +29,7 @@ colors = {0: (204, 192, 179),
           'light text': (249, 246, 242),
           'dark text': (119, 110, 101),
           'other': (0, 0, 0),
-          'bg': (187, 173, 160)}
+          'bg': (168, 237, 184)}
 
 # game variables initialize
 board_values = [[0 for _ in range(4)] for _ in range(4)]
@@ -37,11 +37,11 @@ game_over = False
 spawn_new = True
 init_count = 0
 direction = ''
-score = 0
-file = open('f:/soft_serve/PyGame/lessons/2048/high_score', 'r')
+score = 0 # Початковий рахунок гравця
+file = open('high_score', 'r') 
 init_high = int(file.readline())
 file.close()
-high_score = init_high
+high_score = init_high # Було б круто добавити логування гравців.
 
 
 # draw game over and restart text
@@ -150,12 +150,12 @@ def new_pieces(board):
 
 # draw background for the board
 def draw_board():
-    pygame.draw.rect(screen, colors['bg'], [0, 0, 400, 400], 0, 10)
+    pygame.draw.rect(screen, colors['bg'], [0, 0, 400, 400], 0)
     score_text = font.render(f'Score: {score}', True, 'black')
     high_score_text = font.render(f'High Score: {high_score}', True, 'black')
     screen.blit(score_text, (10, 410))
     screen.blit(high_score_text, (10, 450))
-    pass
+    
 
 
 # draw tiles for game
@@ -171,21 +171,21 @@ def draw_pieces(board):
                 color = colors[value]
             else:
                 color = colors['other']
-            pygame.draw.rect(screen, color, [j * 95 + 20, i * 95 + 20, 75, 75], 0, 5)
+            pygame.draw.rect(screen, color, [j * 95 + 20, i * 95 + 20, 75, 75], 0)
             if value > 0:
                 value_len = len(str(value))
-                font = pygame.font.Font('freesansbold.ttf', 48 - (5 * value_len))
+                font = pygame.font.Font('freesansbold.ttf', 48 - (5 * value_len)) #Розміри знайдені експерементальним шляхом
                 value_text = font.render(str(value), True, value_color)
                 text_rect = value_text.get_rect(center=(j * 95 + 57, i * 95 + 57))
                 screen.blit(value_text, text_rect)
-                pygame.draw.rect(screen, 'black', [j * 95 + 20, i * 95 + 20, 75, 75], 2, 5)
+                pygame.draw.rect(screen, 'black', [j * 95 + 20, i * 95 + 20, 75, 75], 2)
 
 
 # main game loop
 run = True
 while run:
     timer.tick(fps)
-    screen.fill('gray')
+    screen.fill((165, 176, 170))
     draw_board()
     draw_pieces(board_values)
     if spawn_new or init_count < 2:
@@ -217,7 +217,7 @@ while run:
             elif event.key == pygame.K_RIGHT:
                 direction = 'RIGHT'
 
-            if game_over:
+            if game_over: # Умова Перезагрузки ігри
                 if event.key == pygame.K_RETURN:
                     board_values = [[0 for _ in range(4)] for _ in range(4)]
                     spawn_new = True
