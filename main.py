@@ -42,6 +42,8 @@ file = open('high_score', 'r')
 init_high = int(file.readline())
 file.close()
 high_score = init_high # Було б круто добавити логування гравців.
+pygame.mixer.init()
+sound = pygame.mixer.Sound('soung/ppkk.mp3')
 
 
 # draw game over and restart text
@@ -56,6 +58,7 @@ def draw_over():
 # take your turn based on direction
 def take_turn(direc, board):
     global score
+    sound.play()
     merged = [[False for _ in range(4)] for _ in range(4)]
     if direc == 'UP':
         for i in range(4):
@@ -208,6 +211,7 @@ while run:
         if event.type == pygame.QUIT:
             run = False
         if event.type == pygame.KEYUP:
+
             if event.key == pygame.K_UP:
                 direction = 'UP'
             elif event.key == pygame.K_DOWN:
