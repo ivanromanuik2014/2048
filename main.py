@@ -38,7 +38,7 @@ spawn_new = True
 init_count = 0
 direction = ''
 score = 0
-file = open('f:/soft_serve/PyGame/lessons/2048/high_score', 'r')
+file = open('high_score', 'r')
 init_high = int(file.readline())
 file.close()
 high_score = init_high
