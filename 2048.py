@@ -2,28 +2,31 @@ import pygame as pg
 from os import listdir, path
 import random
 
-def run_animation(animation_frames: list, frame_index: int, running_animation: bool) -> int:
-    """
-    Runs an animation.
+#rus start animation
+def run_start_animation(animation_frames: list) -> bool:
+    """Run the start animation using a list of frames.
 
-    Parameters:
-    animation_frames (list): A list of animation frames.
-    frame_index (int): The current frame index.
-    running_animation (bool): A flag indicating whether the animation is running.
+    Args:
+        animation_frames (list): A list of frame filenames to use in the animation.
 
     Returns:
-    int: The updated frame index.
-    bool: A flag indicating whether the animation is running.
+        bool: True if the animation is running; False if the animation has stopped.
     """
-    if running_animation:
-        play_sound(sound_file_path_start)
+    play_sound(sound_file_path_start)
+    running_animation = True
+    frame_index = 0
+    while running_animation:
         frame = pg.image.load(path.join(StartAnimationPath, animation_frames[frame_index]))
         screen.blit(frame, (-40, 40))
         frame_index += 1
+        pg.display.update()
+        clock.tick(FPS)
         if frame_index >= len(listdir(StartAnimationPath)):
-            running_animation = False  # Встановлюємо прапорець вимкнення анімації
-    return frame_index, running_animation  # Повертаємо оновлений frame_index та running_animation
+            running_animation = False
+            running_start_animation = False
+    return running_start_animation
 
+#play soung
 def play_sound(path: str) -> None:
     """
     Plays a sound file.
@@ -56,6 +59,7 @@ def draw_board() -> None:
     screen.blit(high_score_text, (10, 460))
     pass
 
+#draw skils board
 def draw_skils_board() ->None:
     pg.draw.rect(screen, colors['skils_board'], [400, 0, 150, HEIGHT], 0)
     pass
@@ -193,10 +197,60 @@ def take_turn(direc, board):
                         merged[i][4 - j + shift] = True
     return board
 
+#display game over
+def display_text_message(text: str) -> None:
+    """
+    Display the text message in the center of the screen.
+
+    This function creates a rectangle to display the text message "text"
+    and draws a border around it. The text is centered inside the rectangle.
+
+    Parameters:
+    text (str): The message to display.
+
+    Returns:
+    None
+    """
+    rect_game_message = pg.Rect((WIDTH / 2) - 225 , (HEIGHT / 2) - 100, 450, 150)
+    font_game_message = pg.font.Font(font_one_url, 32)
+    game_text = font_game_message.render(f'{text}', True, 'black')
+    text_rect = game_text.get_rect()
+    text_rect.center = rect_game_message.center
+    pg.draw.rect(screen, colors['gg'], rect_game_message, border_radius=10)
+    pg.draw.rect(screen, "black", rect_game_message, border_radius=10, width= 5)
+    screen.blit(game_text, text_rect)
+
+#display winner animation
+def display_game_win(animation_frames: list) -> None:
+    """Display the game win animation using a list of frames.
+
+    Args:
+        animation_frames (list): A list of frame filenames to use in the win animation.
+
+    Returns:
+        None
+    """
+    play_sound(sound_file_path_win)
+    running_animation = True
+    frame_index = 0
+    while running_animation:
+        frame = pg.image.load(path.join(WinAnimationPath, animation_frames[frame_index]))
+        screen.blit(frame, (0, 0))
+        frame_index += 1
+        pg.display.update()
+        clock.tick(FPS)
+        if frame_index >= len(listdir(WinAnimationPath)):
+            running_animation = False
+            running_win_animation = False
+    return running_win_animation  
+    
+
+
 # Constants
 WIDTH = 550
 HEIGHT = 500
 FPS = 15
+winner_score = 2048
 
 # 2048 game color library
 colors = {0: (204, 192, 179),
@@ -214,16 +268,22 @@ colors = {0: (204, 192, 179),
           'light text': (249, 246, 242),
           'dark text': (119, 110, 101),
           'bg': (187, 173, 160),
-          'skils_board': (255, 255, 179)
+          'skils_board': (255, 255, 179),
+          'gg': (250, 250, 250)
           }
 
 # URL
 icon_image_url = "Images\\icon.png"
 StartAnimationPath = "Images\\StartAnimation"
-start_animation = listdir(StartAnimationPath)
-sound_file_path_start = "sounds\\sound_start3.mp3"  # Шлях до вашого звукового файлу
+WinAnimationPath = "Images\\WinAnimation"
+start_animation_list = listdir(StartAnimationPath)
+win_animation_list = listdir(WinAnimationPath)
+sound_file_path_start = "sounds\\sound_start3.mp3"
 sound_file_path_move = "sounds\\sound_move1.mp3"
+sound_file_path_gg = "sounds\\sound_gg.mp3"
+sound_file_path_win = "sounds\\sound_win.mp3"
 font_one_url = "font//Gropled-Bold.otf"
+
 
 
 pg.init()
@@ -248,12 +308,14 @@ high_score = 0
 
 #Flags
 run = True
-running_animation = True
+running_start_animation = True
 frame_index = 0
 spawn_new = True
 init_count = 0
 game_over = False
+winner =False
 direction = ''
+stop = False
 
 #Main loop
 while run:
@@ -273,12 +335,21 @@ while run:
                 direction = 'LEFT'
             elif event.key == pg.K_RIGHT:
                 direction = 'RIGHT'
+            
+            if game_over or winner:
+                if event.key == pg.K_RETURN:
+                    board_values = [[0 for _ in range(4)] for _ in range(4)]
+                    spawn_new = True
+                    init_count = 0
+                    score = 0
+                    direction = ''
+                    game_over = False
+                    winner = False
+                    stop = False
 
 # Start Animation
-    while running_animation:
-        frame_index, running_animation = run_animation(start_animation, frame_index, running_animation)
-        pg.display.update()
-        clock.tick(FPS)
+    if running_start_animation:
+        running_start_animation = run_start_animation(start_animation_list)
         
     screen.fill('gray')
     draw_board()
@@ -290,11 +361,27 @@ while run:
         spawn_new = False
         init_count += 1
 
-    if direction != '':
+    if direction != '' and not stop:
         board_values = take_turn(direction, board_values)
         direction = ''
         spawn_new = True
     
+    if any(winner_score in row for row in board_values) and not stop:
+        play_sound(sound_file_path_win)
+        display_game_win(win_animation_list)
+        winner = True
+
+    if winner:
+        display_text_message("Вітаю! Ви перемогли")
+        pg.display.update()
+        stop = True
+
+    if game_over:
+        if not stop:
+            play_sound(sound_file_path_gg)
+        display_text_message("ГРУ ЗАКІНЧИНО")
+        pg.display.update()
+        stop = True
     
     # Update
     pg.display.update()
