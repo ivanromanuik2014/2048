@@ -1,6 +1,8 @@
 import pygame as pg
-from os import listdir, path
+from os import listdir, path as os_path
 import random
+from copy import deepcopy
+from time import sleep
 
 #rus start animation
 def run_animation_full_screen(path_to_folders: str, animation_frames: list) -> None:
@@ -16,7 +18,7 @@ def run_animation_full_screen(path_to_folders: str, animation_frames: list) -> N
     running_animation = True
     frame_index = 0
     while running_animation:
-        frame = pg.image.load(path.join(path_to_folders, animation_frames[frame_index])).convert()
+        frame = pg.image.load(os_path.join(path_to_folders, animation_frames[frame_index])).convert()
         screen.blit(frame, (0, 0))
         pg.display.update()
         clock.tick(FPS)
@@ -42,7 +44,7 @@ def play_sound(path: str) -> None:
 def draw_board() -> None:
     """
     Draws the game board.
-
+    
     Parameters:
         None
 
@@ -59,7 +61,19 @@ def draw_board() -> None:
 
 #draw skils board
 def draw_skils_board() -> None:
+    """
+    Draws the skils board.
+    
+    Parameters:
+        None
+    """
     pg.draw.rect(screen, colors['skils_board'], [400, 0, 150, HEIGHT], 0)
+    if keys[pg.K_1]:
+        draw_icon_button(mario_save_button_big, (75, 55))
+    else:
+        draw_icon_button(mario_save_button_small, (75, 55))
+    if keys[pg.K_2]:
+        draw_icon_button(mario_load_button_big, (75, 55))
     
 # draw tiles for game
 def draw_pieces(board) -> None:
@@ -110,9 +124,9 @@ def new_pieces(board) -> bool|list:
         if board[row][col] == 0:
             count += 1
             if random.randint(1, 10) == 10:
-                board[row][col] = 1024
+                board[row][col] = 4
             else:
-                board[row][col] = 512
+                board[row][col] = 2
     if count < 1:
         full = True
     return board, full
@@ -233,6 +247,53 @@ def display_text_message(text: str) -> None:
     pg.draw.rect(screen, "black", rect_game_message, border_radius=10, width= 5)
     screen.blit(game_text, text_rect)
 
+def draw_icon_button(path: str, position: tuple, bg_color: tuple = (255, 255, 255))->None:
+    """
+    Draw an icon button on the screen.
+
+    Parameters:
+    path (str): The path to the icon image.
+    position (tuple): The position of the icon button.
+    bg_color (tuple): The background color of the icon button.
+    """
+    image_button = pg.image.load(path).convert_alpha()
+    image_button.set_colorkey(bg_color)
+    image_button_rect = image_button.get_rect()
+    image_button_rect.center = ( 400 + position[0], position[1])
+    screen.blit(image_button, image_button_rect)
+   
+def user_save(board: list, score: int) -> list|int:
+    """
+    Perform user save action in the game.
+
+    Parameters:
+    board (list): The current game board to be saved.
+    score (int): The current score of the game to be saved.
+
+    Returns:
+    tuple: A tuple containing the deep copy of the board and the score.
+    """
+    play_sound(sound_file_path_save)
+    save_board = deepcopy(board)
+    save_score = score
+    return save_board, save_score
+
+def user_load(board: list, score: int) -> list|int:
+    """
+    Perform user load action in the game.
+
+    Parameters:
+    board (list): The current game board to be loaded.
+    score (int): The current score of the game to be loaded.
+
+    Returns:
+    tuple: A tuple containing the deep copy of the loaded board and the loaded score.
+    """
+    play_sound(sound_file_path_load)
+    board_values_load = deepcopy(board)
+    score_load = score
+    return board_values_load, score_load
+
 # Constants
 WIDTH = 550
 HEIGHT = 500
@@ -260,17 +321,22 @@ colors = {0: (204, 192, 179),
           }
 
 # URL
+file_score_url = "high_score.txt"
 icon_image_url = "Images\\icon.png"
-StartAnimationPath = "Images\\StartAnimation"
-WinAnimationPath = "Images\\WinAnimation"
-start_animation_list = listdir(StartAnimationPath)
-win_animation_list = listdir(WinAnimationPath)
+mario_save_button_small = "Images\\mario_button\\folder_mario_small.png"
+mario_save_button_big = "Images\\mario_button\\folder_mario_big.png"
+mario_load_button_big = "Images\\mario_button\\folder_mario_big_load.png"
+start_animation_url = "Images\\StartAnimation"
+win_animation_url = "Images\\WinAnimation"
 sound_file_path_start = "sounds\\sound_start3.mp3"
 sound_file_path_move = "sounds\\sound_move1.mp3"
 sound_file_path_gg = "sounds\\sound_gg.mp3"
 sound_file_path_win = "sounds\\sound_win.mp3"
+sound_file_path_save = "sounds\\sound_save.mp3"
+sound_file_path_load = "sounds\\sound_load.mp3"
 font_one_url = "font//Gropled-Bold.otf"
-
+start_animation_list = listdir(start_animation_url)
+win_animation_list = listdir(win_animation_url)
 
 
 pg.init()
@@ -287,8 +353,16 @@ clock.tick(FPS)
 
 #Game variables initialize
 board_values = [[0 for _ in range(4)] for _ in range(4)]
+save_board = deepcopy(board_values)
 score = 0
-high_score = 0
+save_score = score
+try:
+    with open(file_score_url, encoding="utf-8") as file_score:
+        high_score = int(file_score.read())
+except FileNotFoundError:
+    print("Файл не знайдено")
+    high_score = 0
+
 
 #Flags
 run = True
@@ -300,6 +374,8 @@ game_over = False
 winner =False
 direction = ''
 stop = False
+save_game = False
+load_game = False
 
 #Main loop
 while run:
@@ -307,10 +383,11 @@ while run:
 #Ranning start animation Змінити стартуву анімацію
     if running_start_animation:
         play_sound(sound_file_path_start)
-        run_animation_full_screen(StartAnimationPath, start_animation_list)
+        run_animation_full_screen(start_animation_url, start_animation_list)
         running_start_animation = False
 
     screen.fill('gray')
+    keys = pg.key.get_pressed()
     draw_board()
     draw_skils_board()
     draw_pieces(board_values)
@@ -330,7 +407,11 @@ while run:
                 direction = 'LEFT'
             elif event.key == pg.K_RIGHT:
                 direction = 'RIGHT'
-            
+            elif event.key == pg.K_1:
+                save_game = True
+            elif event.key == pg.K_2:
+                load_game = True
+                
             if game_over or winner:
                 if event.key == pg.K_RETURN:
                     board_values = [[0 for _ in range(4)] for _ in range(4)]
@@ -341,7 +422,9 @@ while run:
                     game_over = False
                     winner = False
                     stop = False
-        
+                    save_board = [[0 for _ in range(4)] for _ in range(4)]
+                    save_score = 0
+
     if spawn_new or init_count < 2:
         board_values, game_over = new_pieces(board_values)
         spawn_new = False
@@ -351,6 +434,22 @@ while run:
         board_values = take_turn(direction, board_values)
         direction = ''
         spawn_new = True
+
+    if save_game:
+        save_board, save_score = user_save(board_values, score)
+        save_game = False
+
+    if load_game:
+        if save_board == [[0 for _ in range(4)] for _ in range(4)]:
+            if keys[pg.K_2]:
+                display_text_message("Збережень немає")
+                pg.display.update()
+                sleep(2)
+        else:
+            board_values, score = user_load(save_board, save_score)
+            load_game = False
+            game_over = False
+            stop = False
     
     if any(winner_score in row for row in board_values) and not stop:
         winner = True
@@ -358,7 +457,7 @@ while run:
     if winner:
         if not stop:
             play_sound(sound_file_path_win)
-            run_animation_full_screen(WinAnimationPath, win_animation_list)
+            run_animation_full_screen(win_animation_url, win_animation_list)
         display_text_message("Ви перемогри)")
         stop = True
 
@@ -367,6 +466,15 @@ while run:
             play_sound(sound_file_path_gg)
         display_text_message("ГРУ ЗАВЕРШИНО")
         stop = True
+
+    if (game_over or winner) and high_score < score:
+        try:
+            with open(file_score_url, "w", encoding="utf-8") as file_score:
+                file_score.write(str(score))
+            high_score = score
+        except FileNotFoundError:
+            print("Файл не знайно, рахунок не був оновленний")
+            high_score = 0
     
     pg.display.update()
     clock.tick(FPS)
