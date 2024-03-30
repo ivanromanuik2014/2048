@@ -119,6 +119,22 @@ def new_pieces(board) -> bool|list:
 
 # take your turn based on direction
 def take_turn(direc, board) -> list:
+    """
+    Perform a turn in the 2048 game by moving tiles in the specified direction.
+
+    Parameters:
+    - direc (str): The direction in which to move the tiles ('UP', 'DOWN', 'LEFT', 'RIGHT').
+    - board (list): The current state of the game board represented as a 4x4 list of integers.
+
+    Returns:
+    - list: The updated game board after the turn.
+
+    Global Variables:
+    - score (int): Tracks the player's score during the game.
+
+    The function implements the logic for moving tiles in the specified direction on the 2048 game board.
+    It handles merging tiles with the same value and updating the score accordingly.
+    """
     global score
     play_sound(sound_file_path_move)
     merged = [[False for _ in range(4)] for _ in range(4)]
@@ -343,7 +359,7 @@ while run:
         if not stop:
             play_sound(sound_file_path_win)
             run_animation_full_screen(WinAnimationPath, win_animation_list)
-        display_text_message("Поздоровляю з перемогою!")
+        display_text_message("Ви перемогри)")
         stop = True
 
     if game_over:
