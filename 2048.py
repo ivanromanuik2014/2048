@@ -123,10 +123,10 @@ def new_pieces(board) -> bool|list:
         col = random.randint(0, 3)
         if board[row][col] == 0:
             count += 1
-            if random.randint(1, 10) == 512:
+            if random.randint(1, 10) == 10:
                 board[row][col] = 4
             else:
-                board[row][col] = 256
+                board[row][col] = 2
     if count < 1:
         full = True
     return board, full
@@ -334,7 +334,7 @@ sound_file_path_gg = "sounds\\sound_gg.mp3"
 sound_file_path_win = "sounds\\sound_win.mp3"
 sound_file_path_save = "sounds\\sound_save.mp3"
 sound_file_path_load = "sounds\\sound_load.mp3"
-font_one_url = "font//Gropled-Bold.otf"
+font_one_url = "font/beer_money.ttf"
 start_animation_list = listdir(start_animation_url)
 win_animation_list = listdir(win_animation_url)
 
