@@ -123,10 +123,10 @@ def new_pieces(board) -> bool|list:
         col = random.randint(0, 3)
         if board[row][col] == 0:
             count += 1
-            if random.randint(1, 10) == 10:
+            if random.randint(1, 10) == 512:
                 board[row][col] = 4
             else:
-                board[row][col] = 2
+                board[row][col] = 256
     if count < 1:
         full = True
     return board, full
@@ -472,7 +472,7 @@ while run:
             with open(file_score_url, "w", encoding="utf-8") as file_score:
                 file_score.write(str(score))
             high_score = score
-        except FileNotFoundError:
+        except:
             print("Файл не знайно, рахунок не був оновленний")
             high_score = 0
     
